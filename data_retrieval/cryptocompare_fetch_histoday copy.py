@@ -7,19 +7,18 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
 
-api_key = '2ead02859ec550271e1e11dce64258a23f0429e0cb2cf045237d085476bc8709'
+api_key = '71522f0d83a01e1974a110bcee4744b284e12b18e7cafdeb09d706a186f86bf5'
 
-def _url(path):
-    return 'https://min-api.cryptocompare.com' + path
+# %%format https://min-api.cryptocompare.com/documentation?key=Historical&cat=DailyHistoMinute
+# response = requests.get(f'https://min-api.cryptocompare.com/documentation?key=Historical&cat=DailyHistoMinute
 
-# %%
-response = requests.get(_url(f'/data/blockchain/histo/day?fsym=ETH&limit=2000&api_key={api_key}')).json()
+response = requests.get(f'https://min-api.cryptocompare.com/data/histo/minute/daily?fsym=BTC&tsym=USD&date=2019-07-21&api_key={api_key}').json()
 
-# if response.status_code != 200:
-#     raise f'APIError: status = {response.status_code}'
+if response.status_code != 200:
+    raise f'APIError: status = {response.status_code}'
 
-blckchn_hist = pd.DataFrame(response['Data']['Data'])
-blckchn_hist.to_csv('cryptocompare_blockchain_hist.csv', index=False)
+blckchn_hist = pd.DataFrame(response['Data'])
+# blckchn_hist.to_csv('cryptocompare_blockchain_hist.csv', index=False)
 
 # %%
 response = requests.get(_url(f'/data/v2/histoday?fsym=ETH&tsym=USD&limit=2000&api_key={api_key}'))
