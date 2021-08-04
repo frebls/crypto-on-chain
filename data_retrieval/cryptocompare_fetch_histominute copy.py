@@ -6,15 +6,21 @@ from pandas.core.indexes.base import Index
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt
-from datetime import datetime
+from datetime import date, datetime
 import io
 
+# %%
 def _url(path):
     return 'https://min-api.cryptocompare.com/data/histo/minute/daily?' + path
 
 apiKey = "71522f0d83a01e1974a110bcee4744b284e12b18e7cafdeb09d706a186f86bf5"
-dates = pd.date_range(start="2016-01-01",end="2021-07-25")
 
+start = "2015-08-07" #"2016-01-01"
+end = date.today().strftime("%Y-%m-%d")
+dates = pd.date_range(start, end)
+
+# %%
+# multiple output files
 i = 0
 
 for d in dates:
@@ -40,3 +46,23 @@ for d in dates:
         df.to_csv(f'data/eth_usd_min_{start_dt}_to_{end_dt}.csv')
         i = 0
 
+# %%
+import os
+
+data_folder_path = 'C:\\Users\\Francesco\\Desktop\\git_repo\\UCL_thesis\\crypto-on-chain\\data_retrieval\\data'
+
+files = [f for f in os.listdir(data_folder_path) if f.startswith('eth_usd_min_')]
+
+for idx, f in enumerate(files):
+    if idx == 0:
+        df = pd.read_csv(os.path.join('data/', f))
+    else:
+        df_ = pd.read_csv(os.path.join('data/', f))
+        df = pd.concat([df, df_])
+        del df_
+    
+df.set_index('time', inplace=True)
+df.sort_index(inplace=True)
+df.to_csv(f'eth_usd_min.csv')
+
+# %%
