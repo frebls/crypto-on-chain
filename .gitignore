@@ -8,6 +8,8 @@
 **/*.zip
 **/*.gz
 
+**/old/
+
 # User-specific files
 *.rsuser
 *.suo
