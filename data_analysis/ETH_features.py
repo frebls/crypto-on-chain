@@ -32,7 +32,7 @@ degree_df = bq_client.query('''
         , from_address as address
         , count(*) as outdegree
         FROM `fiery-rarity-322109.ethereum.traces_new`
-        where date >= '2017-01-01' and from_address is not null
+        where date(block_timestamp) >= '2017-01-01' and from_address is not null
         GROUP BY date, address
     )
     , indegree_ as (
@@ -40,7 +40,7 @@ degree_df = bq_client.query('''
         , to_address as address
         , count(*) as indegree
         FROM `fiery-rarity-322109.ethereum.traces_new`
-        where date >= '2017-01-01' and to_address is not null
+        where date(block_timestamp) >= '2017-01-01' and to_address is not null
         GROUP BY date, address
     )
     select ifnull(t1.date, t2.date) as date
@@ -66,7 +66,7 @@ exchange_df = bq_client.query('''
     from `fiery-rarity-322109.ethereum.traces_new` t1
     left join `fiery-rarity-322109.ethereum.exchanges_monthly1` t2 on DATE_TRUNC(date(t1.block_timestamp), MONTH) = t2.date_month and t1.from_address = t2.address
     left join `fiery-rarity-322109.ethereum.exchanges_monthly1` t3 on DATE_TRUNC(date(t1.block_timestamp), MONTH) = t3.date_month and t1.to_address = t3.address
-    where date >= '2017-01-01'
+    where date(t1.block_timestamp) >= '2017-01-01'
     group by date
     order by date
 ''').to_dataframe()
@@ -209,7 +209,7 @@ address_df = bq_client.query('''
         select date
         , count(*) nr_addresses
         FROM new_addresses
-        group by date, contract_type
+        group by date
     )
     , calendar as (
         select date from unnest(GENERATE_TIMESTAMP_ARRAY('2015-07-30', '2021-07-30', INTERVAL 1 HOUR)) as date 
@@ -226,14 +226,13 @@ address_df = bq_client.query('''
 # Merge all
 
 # %%
+assert market_df.shape[0] == degree_df.shape[0] == exchange_df.shape[0] == call_df.shape[0] == fee_df.shape[0] == gini_df.shape[0] == balance_usd_df.shape[0] == address_df
 
-market_df
-degree_df
-exchange_df
-call_df
-fee_df
-gini_df
-balance_usd_df
-address_df
+dfs = [market_df, degree_df, exchange_df, call_df, fee_df, gini_df, balance_usd_df, address_df]
+dfs = [df.set_index('date') for df in dfs]
+df = dfs[0].join(dfs[1:])
 
-df = exchange.merge(market_data, on = 'date', how = 'left')
+assert df.shape[0] == market_df.shape[0]
+
+# df = exchange.merge(market_data, on = 'date', how = 'left')
+df.to_csv('ETH_features_hour.csv', index=False)
