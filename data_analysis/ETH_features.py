@@ -121,70 +121,70 @@ gini_df = bq_client.query('''
 
 # %%
 # run query
-balance_usd_df = bq_client.query('''
-    with 
-    double_entry_book as (
-        -- debits
-        select to_address as address, value * price_usd as value_usd, block_timestamp
-        from `fiery-rarity-322109.ethereum.traces_new`
-        where to_address is not null
-        union all
-        -- credits
-        select from_address as address, -value * price_usd as value_usd, block_timestamp
-        from `fiery-rarity-322109.ethereum.traces_new`
-        where from_address is not null
-        union all
-        -- transaction fees debits
-        select miner as address
-        , sum(cast(receipt_gas_used as numeric) * cast(gas_price as numeric) * close) as value_usd
-        , block_timestamp
-        from `bigquery-public-data.crypto_ethereum.transactions` t1
-        left join `fiery-rarity-322109.ethereum.eth_usd_min` t2 on DATETIME_TRUNC(t1.block_timestamp, MINUTE) = TIMESTAMP_SECONDS(t2.time)
-        join `bigquery-public-data.crypto_ethereum.blocks` as blocks on blocks.number = t1.block_number
-        where date(t1.block_timestamp) <= '2021-07-30'
-        group by blocks.miner, block_timestamp
-        union all
-        -- transaction fees credits
-        select from_address as address
-        , -(cast(receipt_gas_used as numeric) * cast(gas_price as numeric) * close) as value_usd
-        , block_timestamp
-        from `bigquery-public-data.crypto_ethereum.transactions` t1
-        left join `fiery-rarity-322109.ethereum.eth_usd_min` t2 on DATETIME_TRUNC(t1.block_timestamp, MINUTE) = TIMESTAMP_SECONDS(t2.time)
-        where date(block_timestamp) <= '2021-07-30' and from_address is not null
-    )
-    ,double_entry_book_by_date as (
-        select 
-            TIMESTAMP_TRUNC(block_timestamp, HOUR) as date, 
-            address,
-            sum(value_usd) as value_usd
-        from double_entry_book
-        where address is not null
-        group by address, date
-    )
-    ,balances_with_gaps as (
-        select 
-            address, 
-            date,
-            sum(value_usd) over (partition by address order by date) as balance_usd,
-            lead(date, 1, CAST('2021-07-30' AS TIMESTAMP)) over (partition by address order by date) as next_date
-            from double_entry_book_by_date
-    )
-    ,calendar as (
-        select date from unnest(GENERATE_TIMESTAMP_ARRAY('2015-07-30', '2021-07-30', INTERVAL 1 HOUR)) as date 
-    )
-    ,balances as (
-        select address, calendar.date, balance_usd
-        from balances_with_gaps
-        join calendar on balances_with_gaps.date <= calendar.date and calendar.date < balances_with_gaps.next_date
-    )
-    select date
-    , avg(balance_usd / 1e18) avg_balance_usd
-    , stddev(balance_usd / 1e18) stddev_balance_usd
-    from balances
-    where date(date) >= '2017-01-01'
-    group by date
-    order by date
-''').to_dataframe()
+# balance_usd_df = bq_client.query('''
+#     with 
+#     double_entry_book as (
+#         -- debits
+#         select to_address as address, value * price_usd as value_usd, block_timestamp
+#         from `fiery-rarity-322109.ethereum.traces_new`
+#         where to_address is not null
+#         union all
+#         -- credits
+#         select from_address as address, -value * price_usd as value_usd, block_timestamp
+#         from `fiery-rarity-322109.ethereum.traces_new`
+#         where from_address is not null
+#         union all
+#         -- transaction fees debits
+#         select miner as address
+#         , sum(cast(receipt_gas_used as numeric) * cast(gas_price as numeric) * close) as value_usd
+#         , block_timestamp
+#         from `bigquery-public-data.crypto_ethereum.transactions` t1
+#         left join `fiery-rarity-322109.ethereum.eth_usd_min` t2 on DATETIME_TRUNC(t1.block_timestamp, MINUTE) = TIMESTAMP_SECONDS(t2.time)
+#         join `bigquery-public-data.crypto_ethereum.blocks` as blocks on blocks.number = t1.block_number
+#         where date(t1.block_timestamp) <= '2021-07-30'
+#         group by blocks.miner, block_timestamp
+#         union all
+#         -- transaction fees credits
+#         select from_address as address
+#         , -(cast(receipt_gas_used as numeric) * cast(gas_price as numeric) * close) as value_usd
+#         , block_timestamp
+#         from `bigquery-public-data.crypto_ethereum.transactions` t1
+#         left join `fiery-rarity-322109.ethereum.eth_usd_min` t2 on DATETIME_TRUNC(t1.block_timestamp, MINUTE) = TIMESTAMP_SECONDS(t2.time)
+#         where date(block_timestamp) <= '2021-07-30' and from_address is not null
+#     )
+#     ,double_entry_book_by_date as (
+#         select 
+#             TIMESTAMP_TRUNC(block_timestamp, HOUR) as date, 
+#             address,
+#             sum(value_usd) as value_usd
+#         from double_entry_book
+#         where address is not null
+#         group by address, date
+#     )
+#     ,balances_with_gaps as (
+#         select 
+#             address, 
+#             date,
+#             sum(value_usd) over (partition by address order by date) as balance_usd,
+#             lead(date, 1, CAST('2021-07-30' AS TIMESTAMP)) over (partition by address order by date) as next_date
+#             from double_entry_book_by_date
+#     )
+#     ,calendar as (
+#         select date from unnest(GENERATE_TIMESTAMP_ARRAY('2015-07-30', '2021-07-30', INTERVAL 1 HOUR)) as date 
+#     )
+#     ,balances as (
+#         select address, calendar.date, balance_usd
+#         from balances_with_gaps
+#         join calendar on balances_with_gaps.date <= calendar.date and calendar.date < balances_with_gaps.next_date
+#     )
+#     select date
+#     , avg(balance_usd / 1e18) avg_balance_usd
+#     , stddev(balance_usd / 1e18) stddev_balance_usd
+#     from balances
+#     where date(date) >= '2017-01-01'
+#     group by date
+#     order by date
+# ''').to_dataframe()
 
 #%% [markdown]
 ## New adresses
@@ -213,7 +213,9 @@ address_df = bq_client.query('''
         group by date
     )
     , calendar as (
-        select date from unnest(GENERATE_TIMESTAMP_ARRAY('2015-07-30', '2021-07-30', INTERVAL 1 HOUR)) as date 
+        select date
+        from unnest(GENERATE_TIMESTAMP_ARRAY('2015-07-30', '2021-07-31', INTERVAL 1 HOUR)) as date
+        where date(date) <= '2021-07-30'
     )
     select calendar.date as date
     , ifnull(nr_addresses, 0) as nr_addresses
@@ -246,6 +248,6 @@ df = dfs[0].join(dfs[1:])
 # %%
 assert df.shape[0] == degree_df.shape[0]
 
-df.to_csv('data/ETH_features_hour.csv', index=False)
+df.to_csv('data/ETH_features_hour1.csv')
 
 # %%
