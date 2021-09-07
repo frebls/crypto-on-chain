@@ -2,21 +2,15 @@ CREATE OR REPLACE TABLE
   `fiery-rarity-322109.ethereum.address_classification` (
   address STRING NOT NULL,
   date_month DATE,
-  avg_count_trace_address_to FLOAT64,
-  avg_count_trace_contract_to FLOAT64,
+  avg_count_trace_to FLOAT64,
   avg_count_address_to FLOAT64,
-  avg_count_contract_to FLOAT64,
-  avg_sum_value_address_to FLOAT64,
-  avg_sum_value_contract_to FLOAT64,
-  avg_count_token_address_to FLOAT64,
+  avg_sum_value_to FLOAT64,
+  avg_count_token_to FLOAT64,
   nr_days_to INT,
-  avg_count_trace_address_from FLOAT64,
-  avg_count_trace_contract_from FLOAT64,
+  avg_count_trace_from FLOAT64,
   avg_count_address_from FLOAT64,
-  avg_count_contract_from FLOAT64,
-  avg_sum_value_address_from FLOAT64,
-  avg_sum_value_contract_from FLOAT64,
-  avg_count_token_address_from FLOAT64,
+  avg_sum_value_from FLOAT64,
+  avg_count_token_from FLOAT64,
   nr_days_from INT,
   avg_balance FLOAT64,
   rank INT
@@ -61,13 +55,13 @@ double_entry_book as (
         from double_entry_book_by_date
 )
 , calendar as (
-    select date from unnest(generate_date_array('2015-08-01', '2021-07-30')) as date
+    select date from unnest(generate_date_array('2015-07-30', '2021-07-30')) as date
 )
-, nr_days as (
-    select DATE_TRUNC(date, MONTH) as date_month, count(*) nr_days
-    from calendar
-    group by date_month  
-)
+-- , nr_days as (
+--     select DATE_TRUNC(date, MONTH) as date_month, count(*) nr_days
+--     from calendar
+--     group by date_month  
+-- )
 , daily_balances as (
     select address, calendar.date, balance
     from daily_balances_with_gaps
@@ -76,13 +70,10 @@ double_entry_book as (
 , daily_from as (
     SELECT DATE(t1.block_timestamp) date
     , t1.from_address as address
-    , sum(case when to_contract_type is not null then 0 else 1 end) count_trace_address
-    , sum(case when to_contract_type is null then 0 else 1 end) count_trace_contract
-    , count(distinct case when to_contract_type is not null then null else t1.to_address end) as count_address
-    , count(distinct case when to_contract_type is null then null else t1.to_address end) as count_contract
-    , sum(case when to_contract_type is not null then null else t1.value / 1e18 * price_usd end) as sum_value_address
-    , sum(case when to_contract_type is null then null else t1.value / 1e18 * price_usd end) as sum_value_contract
-    , count(distinct token_address) count_token_address
+    , count(1) count_trace
+    , count(distinct t1.to_address) as count_address
+    , sum(t1.value / 1e18 * price_usd) as sum_value
+    , count(distinct token_address) count_token
     FROM `fiery-rarity-322109.ethereum.traces_new` t1
     left join `bigquery-public-data.crypto_ethereum.token_transfers` t2 using(from_address, block_timestamp)
     WHERE t1.from_address is not null and from_contract_type is null and (from_month_mined_blocks is null) --or from_month_mined_blocks < 20)
@@ -91,13 +82,10 @@ double_entry_book as (
 daily_to as (
     SELECT DATE(t1.block_timestamp) date
     , t1.to_address as address
-    , sum(case when from_contract_type is not null then 0 else 1 end) count_trace_address
-    , sum(case when from_contract_type is null then 0 else 1 end) count_trace_contract
-    , count(distinct case when from_contract_type is not null then null else t1.from_address end) as count_address
-    , count(distinct case when from_contract_type is null then null else t1.from_address end) as count_contract
-    , sum(case when from_contract_type is not null then null else t1.value / 1e18 * price_usd end) as sum_value_address
-    , sum(case when from_contract_type is null then null else t1.value / 1e18 * price_usd end) as sum_value_contract
-    , count(distinct token_address) count_token_address
+    , count(1) count_trace
+    , count(distinct t1.from_address) as count_address
+    , sum(t1.value / 1e18 * price_usd) as sum_value
+    , count(distinct token_address) count_token
     FROM `fiery-rarity-322109.ethereum.traces_new` t1
     left join `bigquery-public-data.crypto_ethereum.token_transfers` t2 using(to_address, block_timestamp)
     WHERE to_address is not null and to_contract_type is null and (to_month_mined_blocks is null) --or to_month_mined_blocks < 20)
@@ -108,22 +96,16 @@ daily_to as (
     ifnull(t1.address, t2.address) as address
     , ifnull(DATE_TRUNC(t1.date, MONTH), DATE_TRUNC(t2.date, MONTH)) as date_month --cast(ifnull(FORMAT_DATE('%Y%m', t1.date), FORMAT_DATE('%Y%m', t2.date)) as INT)
 
-    , ifnull(avg(t1.count_trace_address), 0) as avg_count_trace_address_to
-    , ifnull(avg(t1.count_trace_contract), 0) as avg_count_trace_contract_to
+    , ifnull(avg(t1.count_trace), 0) as avg_count_trace_to
     , ifnull(avg(t1.count_address), 0) as avg_count_address_to
-    , ifnull(avg(t1.count_contract), 0) as avg_count_contract_to
-    , ifnull(avg(t1.sum_value_address), 0) as avg_sum_value_address_to
-    , ifnull(avg(t1.sum_value_contract), 0) as avg_sum_value_contract_to
-    , ifnull(avg(t1.count_token_address), 0) as avg_count_token_address_to
+    , ifnull(avg(t1.sum_value), 0) as avg_sum_value_to
+    , ifnull(avg(t1.count_token), 0) as avg_count_token_to
     , ifnull(count(distinct t1.date), 0) as nr_days_to
 
-    , ifnull(avg(t2.count_trace_address), 0) as avg_count_trace_address_from
-    , ifnull(avg(t2.count_trace_contract), 0) as avg_count_trace_contract_from
+    , ifnull(avg(t2.count_trace), 0) as avg_count_trace_from
     , ifnull(avg(t2.count_address), 0) as avg_count_address_from
-    , ifnull(avg(t2.count_contract), 0) as avg_count_contract_from
-    , ifnull(avg(t2.sum_value_address), 0) as avg_sum_value_address_from
-    , ifnull(avg(t2.sum_value_contract), 0) as avg_sum_value_contract_from
-    , ifnull(avg(t2.count_token_address), 0) as avg_count_token_address_from
+    , ifnull(avg(t2.sum_value), 0) as avg_sum_value_from
+    , ifnull(avg(t2.count_token), 0) as avg_count_token_from
     , ifnull(count(distinct t2.date), 0) as nr_days_from
 
     , avg(balance) as avg_balance

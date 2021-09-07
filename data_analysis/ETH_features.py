@@ -62,11 +62,13 @@ degree_df = bq_client.query('''
 # run query
 exchange_df = bq_client.query('''
     select TIMESTAMP_TRUNC(t1.block_timestamp, HOUR) as date
+    , sum(case when t2.address is not null and t3.address is null then t1.value / 1e18 else 0 end) as from_exchange
+    , sum(case when t3.address is not null and t2.address is null then t1.value / 1e18 else 0 end) as to_exchange
     , sum(case when t2.address is not null and t3.address is null then t1.value * t1.price_usd / 1e18 else 0 end) as from_exchange_usd
     , sum(case when t3.address is not null and t2.address is null then t1.value * t1.price_usd / 1e18 else 0 end) as to_exchange_usd
     from `fiery-rarity-322109.ethereum.traces_new` t1
-    left join `fiery-rarity-322109.ethereum.exchanges_monthly1` t2 on DATE_TRUNC(date(t1.block_timestamp), MONTH) = t2.date_month and t1.from_address = t2.address
-    left join `fiery-rarity-322109.ethereum.exchanges_monthly1` t3 on DATE_TRUNC(date(t1.block_timestamp), MONTH) = t3.date_month and t1.to_address = t3.address
+    left join `fiery-rarity-322109.ethereum.exchanges_monthly` t2 on DATE_TRUNC(date(t1.block_timestamp), MONTH) = t2.date_month and t1.from_address = t2.address
+    left join `fiery-rarity-322109.ethereum.exchanges_monthly` t3 on DATE_TRUNC(date(t1.block_timestamp), MONTH) = t3.date_month and t1.to_address = t3.address
     where date(t1.block_timestamp) >= '2017-01-01'
     group by date
     order by date
@@ -105,86 +107,16 @@ fee_df = bq_client.query('''
 ''').to_dataframe()
 
 #%% [markdown]
-## Gini coefficient
+## Gini coefficient, addresses count and USD balance avg and stddvt
 
 # %%
 # run query
-gini_df = bq_client.query('''
-    SELECT date, gini
+features_df = bq_client.query('''
+    SELECT *
     FROM `fiery-rarity-322109.ethereum.features`
     where date(date) >= '2017-01-01'
     order by date
 ''').to_dataframe()
-
-#%% [markdown]
-## USD profit/loss
-
-# %%
-# run query
-# balance_usd_df = bq_client.query('''
-#     with 
-#     double_entry_book as (
-#         -- debits
-#         select to_address as address, value * price_usd as value_usd, block_timestamp
-#         from `fiery-rarity-322109.ethereum.traces_new`
-#         where to_address is not null
-#         union all
-#         -- credits
-#         select from_address as address, -value * price_usd as value_usd, block_timestamp
-#         from `fiery-rarity-322109.ethereum.traces_new`
-#         where from_address is not null
-#         union all
-#         -- transaction fees debits
-#         select miner as address
-#         , sum(cast(receipt_gas_used as numeric) * cast(gas_price as numeric) * close) as value_usd
-#         , block_timestamp
-#         from `bigquery-public-data.crypto_ethereum.transactions` t1
-#         left join `fiery-rarity-322109.ethereum.eth_usd_min` t2 on DATETIME_TRUNC(t1.block_timestamp, MINUTE) = TIMESTAMP_SECONDS(t2.time)
-#         join `bigquery-public-data.crypto_ethereum.blocks` as blocks on blocks.number = t1.block_number
-#         where date(t1.block_timestamp) <= '2021-07-30'
-#         group by blocks.miner, block_timestamp
-#         union all
-#         -- transaction fees credits
-#         select from_address as address
-#         , -(cast(receipt_gas_used as numeric) * cast(gas_price as numeric) * close) as value_usd
-#         , block_timestamp
-#         from `bigquery-public-data.crypto_ethereum.transactions` t1
-#         left join `fiery-rarity-322109.ethereum.eth_usd_min` t2 on DATETIME_TRUNC(t1.block_timestamp, MINUTE) = TIMESTAMP_SECONDS(t2.time)
-#         where date(block_timestamp) <= '2021-07-30' and from_address is not null
-#     )
-#     ,double_entry_book_by_date as (
-#         select 
-#             TIMESTAMP_TRUNC(block_timestamp, HOUR) as date, 
-#             address,
-#             sum(value_usd) as value_usd
-#         from double_entry_book
-#         where address is not null
-#         group by address, date
-#     )
-#     ,balances_with_gaps as (
-#         select 
-#             address, 
-#             date,
-#             sum(value_usd) over (partition by address order by date) as balance_usd,
-#             lead(date, 1, CAST('2021-07-30' AS TIMESTAMP)) over (partition by address order by date) as next_date
-#             from double_entry_book_by_date
-#     )
-#     ,calendar as (
-#         select date from unnest(GENERATE_TIMESTAMP_ARRAY('2015-07-30', '2021-07-30', INTERVAL 1 HOUR)) as date 
-#     )
-#     ,balances as (
-#         select address, calendar.date, balance_usd
-#         from balances_with_gaps
-#         join calendar on balances_with_gaps.date <= calendar.date and calendar.date < balances_with_gaps.next_date
-#     )
-#     select date
-#     , avg(balance_usd / 1e18) avg_balance_usd
-#     , stddev(balance_usd / 1e18) stddev_balance_usd
-#     from balances
-#     where date(date) >= '2017-01-01'
-#     group by date
-#     order by date
-# ''').to_dataframe()
 
 #%% [markdown]
 ## New adresses
@@ -231,8 +163,7 @@ address_df = bq_client.query('''
 # exchange_df.to_csv('data/ETH_exchange_hour.csv', index=False)
 # call_df.to_csv('data/ETH_call_hour.csv', index=False)
 # fee_df.to_csv('data/ETH_fee_hour.csv', index=False)
-# gini_df.to_csv('data/ETH_gini_hour.csv', index=False)
-# # balance_usd_df.to_csv('data/ETH_balance_usd_hour.csv', index=False)
+# features_df.to_csv('data/ETH_gini_balance_usd_address_hour.csv', index=False)
 # address_df.to_csv('data/ETH_address_hour.csv', index=False)
 
 # %% [markdown]
@@ -241,13 +172,11 @@ address_df = bq_client.query('''
 # %%
 # assert market_df.shape[0] == degree_df.shape[0] == exchange_df.shape[0] == call_df.shape[0] == fee_df.shape[0] == gini_df.shape[0] == balance_usd_df.shape[0] == address_df
 
-dfs = [market_df, degree_df, exchange_df, call_df, fee_df, gini_df, address_df] #, balance_usd_df
+dfs = [market_df, degree_df, exchange_df, call_df, fee_df, features_df, address_df]
 dfs = [df.set_index('date') for df in dfs]
 df = dfs[0].join(dfs[1:])
 
 # %%
 assert df.shape[0] == degree_df.shape[0]
 
-df.to_csv('data/ETH_features_hour1.csv')
-
-# %%
+# df.to_csv('data/ETH_features_hour.csv')

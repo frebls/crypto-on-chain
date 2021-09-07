@@ -8,7 +8,9 @@
 **/*.zip
 **/*.gz
 
-**/old/
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+old/
 
 # User-specific files
 *.rsuser
