@@ -335,28 +335,28 @@ ax1[1].set_xscale('log')
 # %%
 # '' gas fees '''
 
-fig, ax1 = plt.subplots(2, 1, figsize=(8, 8))
+fig, ax1 = plt.subplots(figsize=(8, 4)) #2, 1, 
 
 # ax1[0].plot(df.date, df.stddev_fee_usd, color = pal[1], linewidth = .3)
 # ax1[0].set_ylabel('StDev. Gas fees, ETH', color = pal[1])
-ax1[0].plot(df.date, df.avg_fee_usd, color = pal[1], linewidth = .1)
-ax1[0].set_ylabel('Avg. Gas fees, ETH (log scale)', color = pal[1])
-ax1[0].set_yscale('log')
+ax1.plot(df.date, df.avg_fee_usd, color = pal[1], linewidth = .1)
+ax1.set_ylabel('Avg. Gas fees, USD (log scale)', color = pal[1])
+ax1.set_yscale('log')
 
-ax2 = ax1[0].twinx()
+ax2 = ax1.twinx()
 ax2.plot(df.date, df.avg_fee_usd, color = pal[0], linewidth = .1)
-ax2.set_ylabel('Avg. Gas fees, ETH', color = pal[0])
+ax2.set_ylabel('Avg. Gas fees, USD', color = pal[0])
 ax2.set_ylim([-1, 100])
 ax2.grid(False)
 
-ax1[1].scatter(df.close, df.avg_fee_usd, color = pal[0], s = .1)
-# ax1[1].ticklabel_format(axis="y", style="sci", scilimits=(0,0))
-ax1[1].set_xlabel('Price, USD (log scale)')
-ax1[1].set_ylabel('Avg. Gas fees, ETH (log scale)')
-ax1[1].set_yscale('log')
-ax1[1].set_xscale('log')
+# ax1[1].scatter(df.close, df.avg_fee_usd, color = pal[0], s = .1)
+# # ax1[1].ticklabel_format(axis="y", style="sci", scilimits=(0,0))
+# ax1[1].set_xlabel('Price, USD (log scale)')
+# ax1[1].set_ylabel('Avg. Gas fees, ETH (log scale)')
+# ax1[1].set_yscale('log')
+# ax1[1].set_xscale('log')
 
-# plt.savefig("charts/gas_fees.png")
+plt.savefig("charts/gas_fees.png")
 
 
 # %%
