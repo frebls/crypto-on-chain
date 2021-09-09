@@ -18,6 +18,53 @@ pal = ['#00388F', '#FFB400', '#FF4B00', '#65B800', '#00B1EA']
 sns.set_palette(sns.color_palette(pal))
 
 df = pd.read_csv('data/ETH_features_hour.csv')
+df.date = pd.to_datetime(df.date)
+
+
+# %%
+# '' price_and_return '''
+
+
+import matplotlib.ticker as mtick
+
+fig, ax1 = plt.subplots(2, 1, figsize=(8, 6))
+
+ax1[0].fill_between(market_data.date, market_data.volume, color = pal[1], linewidth = .5)
+ax1[0].set_ylabel('Volume, USD', color = pal[1])
+
+ax2 = ax1[0].twinx()
+ax2.plot(market_data.date, market_data.close, color = pal[0], linewidth = .5)
+ax2.set_ylabel('Price, USD', color = pal[0])
+ax2.get_yaxis().set_major_formatter(plt.FuncFormatter(lambda x, p: format(int(x), ',')))
+ax2.grid(False)
+
+ax3 = ax1[0].twinx()
+ax3.set_ylabel('Price, USD (log scale)', color = pal[2])
+ax3.spines['right'].set_position(('outward', 60))
+ax3.yaxis.set_ticks_position('right')
+ax3.yaxis.set_label_position('right')
+ax3.plot(market_data.date, market_data.close, color = pal[2], linewidth = .5)
+ax3.set_yscale('log')
+ax3.grid(False)
+
+log_returns = np.log(market_data.close / market_data.close.shift(1))
+high_low = (market_data.high - market_data.low) / market_data[['high', 'low']].mean(axis=1)
+
+ax1[1].plot(market_data.date, log_returns, color = pal[0], label = "", linewidth = .5)
+ax1[1].set_ylabel('Log return', color = pal[0])
+ax1[1].yaxis.set_major_formatter(mtick.PercentFormatter(xmax=1, decimals=None, symbol='%')) #, is_latex=False
+
+ax2 = ax1[1].twinx()
+ax2.plot(market_data.date, high_low, color = pal[1], linewidth = .5)
+ax2.set_ylabel('High - Low', color = pal[1])
+ax2.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=1, decimals=None, symbol='%'))
+ax2.grid(False)
+
+plt.tight_layout()
+# plt.show()
+
+# plt.savefig("charts/price_and_return.pdf")
+
 
 # %% [markdown]
 ## Nr of traces
@@ -142,7 +189,7 @@ ax2.grid(False)
 # plt.tight_layout()
 # plt.show()
 
-plt.savefig('charts/number_transactions_monthly.pdf')
+# plt.savefig('charts/number_transactions_monthly.pdf')
 
 
 # %%
@@ -174,7 +221,7 @@ ax2.grid(False)
 # plt.tight_layout()
 # plt.show()
 
-plt.savefig('charts/value_transactions_monthly.pdf')
+# plt.savefig('charts/value_transactions_monthly.pdf')
 
 
 # %%
@@ -187,7 +234,7 @@ ax1.stackplot(traces_value1.date, traces_value1.transfer, traces_value1.call, la
 ax1.legend(loc = 'upper left', frameon = False)
 ax1.set_ylabel('Value, ETH')
 
-plt.savefig('charts/value_transactions_monthly1.pdf')
+# plt.savefig('charts/value_transactions_monthly1.pdf')
 
 
 # %%
@@ -210,7 +257,7 @@ ax2.ticklabel_format(axis = "y", style = "sci", scilimits = (0,0))
 ax2.grid(False)
 # plt.show()
 
-plt.savefig("charts/supply_and_market_cap.pdf")
+# plt.savefig("charts/supply_and_market_cap.pdf")
 
 
 # %%
@@ -236,92 +283,152 @@ ax[1, 1].ticklabel_format(axis="y", style="sci", scilimits=(0,0))
 plt.tight_layout()
 # plt.show()
 
-plt.savefig("charts/number_contracts.pdf")
+# plt.savefig("charts/number_contracts.pdf")
 
 
 # %%
-# '' price_and_return '''
-
-
-import matplotlib.ticker as mtick
-
-fig, ax1 = plt.subplots(2, 1, figsize=(8, 6))
-
-ax1[0].fill_between(market_data.date, market_data.volume, color = pal[1], linewidth = .5)
-ax1[0].set_ylabel('Volume, USD', color = pal[1])
-
-ax2 = ax1[0].twinx()
-ax2.plot(market_data.date, market_data.close, color = pal[0], linewidth = .5)
-ax2.set_ylabel('Price, USD', color = pal[0])
-ax2.get_yaxis().set_major_formatter(plt.FuncFormatter(lambda x, p: format(int(x), ',')))
-ax2.grid(False)
-
-ax3 = ax1[0].twinx()
-ax3.set_ylabel('Price, USD (log scale)', color = pal[2])
-ax3.spines['right'].set_position(('outward', 60))
-ax3.yaxis.set_ticks_position('right')
-ax3.yaxis.set_label_position('right')
-ax3.plot(market_data.date, market_data.close, color = pal[2], linewidth = .5)
-ax3.set_yscale('log')
-ax3.grid(False)
-
-log_returns = np.log(market_data.close / market_data.close.shift(1))
-high_low = (market_data.high - market_data.low) / market_data[['high', 'low']].mean(axis=1)
-
-ax1[1].plot(market_data.date, log_returns, color = pal[0], label = "", linewidth = .5)
-ax1[1].set_ylabel('Log return', color = pal[0])
-ax1[1].yaxis.set_major_formatter(mtick.PercentFormatter(xmax=1, decimals=None, symbol='%')) #, is_latex=False
-
-ax2 = ax1[1].twinx()
-ax2.plot(market_data.date, high_low, color = pal[1], linewidth = .5)
-ax2.set_ylabel('High - Low', color = pal[1])
-ax2.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=1, decimals=None, symbol='%'))
-ax2.grid(False)
-
-plt.tight_layout()
-# plt.show()
-
-plt.savefig("charts/price_and_return.pdf")
-
-
-# %%
-# '' avg_gas_fees '''
-
+# ''' number of addresses '''
 
 fig, ax1 = plt.subplots(2, 1, figsize=(8, 8))
 
-ax1[0].plot(traces_value.date, traces_value.std_call, color = pal[0], linewidth = .5)
-ax1[0].set_ylabel('Avg. transferred amount, ETH (log scale)', color = pal[0])
-ax1[0].set_yscale('log')
+ax1[0].plot(df.date, df.nr_addresses, color = pal[0], linewidth = .2)
+ax1[0].set_ylabel('New addresses', color = pal[0])
+ax1[0].ticklabel_format(axis="y", style="sci", scilimits=(0,0))
 
 ax2 = ax1[0].twinx()
-ax2.plot(traces_value.date, traces_value.std_call, color = pal[1], linewidth = .5)
-ax2.set_ylabel('Avg. transferred amount, ETH', color = pal[1])
+ax2.plot(df.date, df.address_count, color = pal[1], linewidth = 2)
+ax2.set_ylabel('Number of addresses', color = pal[1])
+ax2.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
 ax2.grid(False)
 
-fee_ = traces_value.merge(market_data1, on = 'date', how = 'left')
-
-ax1[1].scatter(fee_.close, fee_.std_call, color = pal[0], s = .5)
-ax1[1].set_xlabel('Price, USD')
-ax1[1].set_ylabel('Std. transferred amount, ETH')
-ax1[1].set_xscale('log')
+ax1[1].scatter(df.close, df.nr_addresses, color = pal[0], s = .3)
+# ax1[1].ticklabel_format(axis="y", style="sci", scilimits=(0,0))
+ax1[1].set_xlabel('Price, USD (log scale)')
+ax1[1].set_ylabel('New addresses (log scale)')
 ax1[1].set_yscale('log')
+ax1[1].set_xscale('log')
 
-# plt.tight_layout()
-# plt.show()
+# plt.savefig("charts/nr_address.pdf")
 
-# plt.savefig("charts/avg_gas_fees.pdf")
+# %%
+# '' number of value transfers '''
+
+fig, ax1 = plt.subplots(2, 1, figsize=(8, 8))
+
+ax1[0].plot(df.date, df.nr_call, color = pal[0], linewidth = .1)
+ax1[0].set_ylabel('Nr. of value transfers')
+ax1[0].ticklabel_format(axis="y", style="sci", scilimits=(0,0))
+
+ax1[1].scatter(df.close, df.nr_call, color = pal[0], s = .3)
+# ax1[1].ticklabel_format(axis="y", style="sci", scilimits=(0,0))
+ax1[1].set_xlabel('Price, USD (log scale)')
+ax1[1].set_ylabel('Nr. of value transfers (log scale)')
+ax1[1].set_yscale('log')
+ax1[1].set_xscale('log')
+
+# plt.savefig("charts/nr_calls.pdf")
 
 
 # %%
-# '' Avg transferred amount '''
+# '' gas fees '''
 
-fig, ax1 = plt.subplots()
+fig, ax1 = plt.subplots(2, 1, figsize=(8, 8))
 
-ax1.plot(traces_value1.date, traces_value1.avg_call, color = pal[0], linewidth = .2)
-ax1.set_ylabel('Avg transferred amount, USD (log scale)', color = pal[0])
-ax1.set_yscale('log')
+# ax1[0].plot(df.date, df.stddev_fee_usd, color = pal[1], linewidth = .3)
+# ax1[0].set_ylabel('StDev. Gas fees, ETH', color = pal[1])
+ax1[0].plot(df.date, df.avg_fee_usd, color = pal[1], linewidth = .3)
+ax1[0].set_ylabel('Avg. Gas fees, ETH (log scale)', color = pal[1])
+ax1[0].set_yscale('log')
 
+ax2 = ax1[0].twinx()
+ax2.plot(df.date, df.avg_fee_usd, color = pal[0], linewidth = .2)
+ax2.set_ylabel('Avg. Gas fees, ETH', color = pal[0])
+ax2.set_ylim([-1, 100])
+ax2.grid(False)
+
+ax1[1].scatter(df.close, df.avg_fee_usd, color = pal[0], s = .3)
+# ax1[1].ticklabel_format(axis="y", style="sci", scilimits=(0,0))
+ax1[1].set_xlabel('Price, USD (log scale)')
+ax1[1].set_ylabel('Avg. Gas fees, ETH (log scale)')
+ax1[1].set_yscale('log')
+ax1[1].set_xscale('log')
+
+plt.savefig("charts/gas_fees.pdf")
+
+
+# %%
+# '' call_value '''
+
+# call_df = bq_client.query('''
+#     select TIMESTAMP_TRUNC(block_timestamp, HOUR) as date
+#     , avg(value / 1e18) as avg_call_value_usd
+#     , stddev(value / 1e18) as stddev_call_value_usd
+#     , count(*) nr_call
+#     FROM `fiery-rarity-322109.ethereum.traces_new`
+#     where date(block_timestamp) >= '2017-01-01' and trace_type = 'call'
+#     group by date
+#     order by date
+# ''').to_dataframe()
+
+fig, ax1 = plt.subplots(2, 1, figsize=(8, 8))
+
+ax1[0].plot(df.date, df.stddev_call_value_usd, color = pal[1], linewidth = .2)
+ax1[0].set_ylabel('StDev. transfer amount, USD', color = pal[1])
+ax1[0].ticklabel_format(axis="y", style="sci", scilimits=(0,0))
+
+ax2 = ax1[0].twinx()
+ax2.plot(df.date, df.avg_call_value_usd, color = pal[0], linewidth = .1)
+ax2.set_ylabel('Avg. transfer amount, USD (log scale)', color = pal[0])
+ax2.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
+ax2.set_yscale('log')
+ax2.grid(False)
+
+ax1[1].scatter(df.close, df.avg_call_value_usd, color = pal[0], s = .3)
+# ax1[1].ticklabel_format(axis="y", style="sci", scilimits=(0,0))
+ax1[1].set_xlabel('Price, USD (log scale)')
+ax1[1].set_ylabel('Nr. of value transfers (log scale)')
+ax1[1].set_yscale('log')
+ax1[1].set_xscale('log')
+
+# plt.savefig("charts/call_value.pdf")
+
+
+# %%
+# '' gas fees '''
+
+fig, ax1 = plt.subplots(2, 1, figsize=(8, 8))
+
+ax1[0].plot(df.date, df.stddev_balance_usd, color = pal[1])
+ax1[0].set_ylabel('StDev. profit/loss, USD', color = pal[1])
+
+ax2 = ax1[0].twinx()
+ax2.plot(df.date, df.avg_balance_usd, color = pal[0])
+ax2.set_ylabel('Avg. profit/loss, USD', color = pal[0])
+ax2.grid(False)
+
+ax1[1].scatter(df.close, df.avg_balance_usd, color = pal[0], s = .3)
+ax1[1].set_xlabel('Price, USD (log scale)')
+ax1[1].set_ylabel('Avg. profit/loss, USD')
+# ax1[1].set_yscale('log')
+ax1[1].set_xscale('log')
+
+# plt.savefig("charts/USD_profitloss.pdf")
+
+
+# %%
+# '' exchange flows '''
+
+fig, ax1 = plt.subplots(2, 1, figsize=(8, 8))
+
+ax1[0].plot(df.date, df.to_exchange, color = pal[0], linewidth = .3)
+ax1[0].ticklabel_format(axis="y", style="sci", scilimits=(0,0))
+ax1[0].set_ylabel('Exchanges inflows, ETH')
+
+ax1[1].plot(df.date, df.net_exchange, color = pal[0], linewidth = .3)
+ax1[1].ticklabel_format(axis="y", style="sci", scilimits=(0,0))
+ax1[1].set_ylabel('Exchanges net-flows, ETH')
+
+# plt.savefig("charts/exchanges_flows.pdf")
 
 # %%
 # '' gini coefficient '''
@@ -329,49 +436,16 @@ ax1.set_yscale('log')
 
 fig, ax1 = plt.subplots(2, 1, figsize=(8, 8))
 
-ax1[0].plot(gini.date, gini.gini, color = pal[0], linewidth = .8)
+ax1[0].plot(df.date, df.gini, color = pal[0], linewidth = .8)
 ax1[0].set_ylabel('Gini coefficient')
 
-gini_ = gini.merge(market_data1, on = 'date', how = 'left')
-
-ax1[1].scatter(gini_.close, gini_.gini, color = pal[0], s = .8)
+ax1[1].scatter(df.close, df.gini, color = pal[0], s = .8)
 ax1[1].set_xlabel('Price, USD')
 ax1[1].set_ylabel('Gini coefficient')
 ax1[1].set_xscale('log')
 # ax1[1].set_yscale('log')
 
-# plt.tight_layout()
-# plt.show()
-
-plt.savefig("charts/gini.pdf")
-
-
-# %%
-# '' Avg. Gas fees, ETH '''
-
-fig, ax1 = plt.subplots(2, 1, figsize=(8, 8))
-
-ax1[0].plot(fee1.date, fee1.avg_fee_usd, color = pal[0], linewidth = .5)
-ax1[0].set_ylabel('Avg. Gas fees, ETH')
-
-# ax2 = ax1[0].twinx()
-# ax2.plot(fee.date, fee.avg_fee_usd, color = pal[0], linewidth = .5)
-# ax2.set_ylabel('Avg fees, USD (log scale)', color = pal[0])
-# ax2.set_yscale('log')
-# ax2.grid(False)
-
-fee_ = fee1.merge(market_data1, on = 'date', how = 'left')
-
-ax1[1].scatter(fee_.close, fee_.avg_fee_usd, color = pal[0], s = .5)
-ax1[1].set_xlabel('Price, USD')
-ax1[1].set_ylabel('Avg. Gas fees, ETH')
-# ax1[1].set_xscale('log')
-ax1[1].set_yscale('log')
-
-# plt.tight_layout()
-# plt.show()
-
-plt.savefig("charts/avg_gas_fees.pdf")
+# plt.savefig("charts/gini.pdf")
 
 
 # %%
@@ -394,30 +468,19 @@ ax[1].set_xscale('log')
 plt.tight_layout()
 # plt.show()
 
-plt.savefig("charts/degrees_power_law.pdf")
+# plt.savefig("charts/degrees_power_law.pdf")
 
 
 # %%
 # '' avg_degree '''
 
-fig, ax1 = plt.subplots(2, 1, figsize=(8, 8))
+fig, ax1 = plt.subplots(figsize=(8, 4))
 
-ax1[0].plot(degree1.date, degree1.avg_indegree, color = pal[0], linewidth = .5)
-ax1[0].set_ylabel('Avg. degree')
-# ax1[0].set_yscale('log')
+ax1.plot(df.date, df.avg_outdegree, color = pal[0], linewidth = .1)
+ax1.set_ylabel('Avg. degree')
+ax1.set_ylim([0.5, 3])
 
-degree_ = degree1.merge(market_data1, on = 'date', how = 'left')
-
-ax1[1].scatter(degree_.close, degree_.avg_indegree, color = pal[0], s = .5)
-ax1[1].set_xlabel('Price, USD')
-ax1[1].set_ylabel('Avg. degree')
-# ax1[1].set_yscale('log')
-ax1[1].set_xscale('log')
-
-# plt.tight_layout()
-# plt.show()
-
-plt.savefig("charts/avg_degree.pdf")
+# plt.savefig("charts/avg_degree.pdf")
 
 
 # %%
@@ -425,50 +488,12 @@ plt.savefig("charts/avg_degree.pdf")
 
 fig, ax1 = plt.subplots(2, 1, figsize=(8, 8))
 
-ax1[0].plot(degree1.date, degree1.stddev_indegree, color = pal[0], linewidth = .5)
-ax1[0].set_ylabel('Std. indegree')
-# ax1[0].set_yscale('log')
+ax1[0].plot(df.date, df.stddev_indegree, color = pal[0], linewidth = .1)
+ax1[0].set_ylabel('StDev. indegree')
+ax1[0].set_ylim([0, 150])
 
-degree_ = degree1.merge(market_data1, on = 'date', how = 'left')
+ax1[1].plot(df.date, df.stddev_outdegree, color = pal[0], linewidth = .1)
+ax1[1].set_ylabel('StDev. outdegree')
+ax1[1].set_ylim([0, 150])
 
-ax1[1].scatter(degree_.close, degree_.stddev_indegree, color = pal[0], s = .5)
-ax1[1].set_xlabel('Price, USD')
-ax1[1].set_ylabel('Std. indegree')
-# ax1[1].set_yscale('log')
-# ax1[1].set_xscale('log')
-
-# plt.tight_layout()
-# plt.show()
-
-plt.savefig("charts/std_indegree.pdf")
-
-
-# %%
-# '' Std. outdegree '''
-
-
-fig, ax1 = plt.subplots(2, 1, figsize=(8, 8))
-
-ax1[0].plot(degree1.date, degree1.stddev_outdegree, color = pal[0], linewidth = .5)
-ax1[0].set_ylabel('Std. outdegree')
-# ax1[0].set_yscale('log')
-
-degree_ = degree1.merge(market_data1, on = 'date', how = 'left')
-
-ax1[1].scatter(degree_.close, degree_.stddev_outdegree, color = pal[0], s = .5)
-ax1[1].set_xlabel('Price, USD')
-ax1[1].set_ylabel('Std. outdegree')
-# ax1[1].set_yscale('log')
-# ax1[1].set_xscale('log')
-
-# plt.tight_layout()
-# plt.show()
-
-plt.savefig("charts/std_outdegree.pdf")
-
-ax2 = ax1.twinx()
-ax2.plot(traces_value1.date, traces_value1.std_call, color = pal[1], linewidth = .2)
-ax2.set_ylabel('Std transferred amount, USD', color = pal[1])
-ax2.grid(False)
-
-
+# plt.savefig("charts/std_degree.pdf")
