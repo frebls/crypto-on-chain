@@ -286,29 +286,32 @@ plt.tight_layout()
 # plt.savefig("charts/number_contracts.pdf")
 
 
+# ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 # %%
 # ''' number of addresses '''
 
 fig, ax1 = plt.subplots(2, 1, figsize=(8, 8))
 
-ax1[0].plot(df.date, df.nr_addresses, color = pal[0], linewidth = .2)
-ax1[0].set_ylabel('New addresses', color = pal[0])
+ax1[0].plot(df.date, df.nr_addresses, color = pal[0], linewidth = .1)
+ax1[0].set_ylabel('New addresses') #, color = pal[0])
 ax1[0].ticklabel_format(axis="y", style="sci", scilimits=(0,0))
+ax1[0].set_ylim([0, 2.5e4])
 
-ax2 = ax1[0].twinx()
-ax2.plot(df.date, df.address_count, color = pal[1], linewidth = 2)
-ax2.set_ylabel('Number of addresses', color = pal[1])
-ax2.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
-ax2.grid(False)
+# ax2 = ax1[0].twinx()
+# ax2.plot(df.date, df.address_count, color = pal[1], linewidth = 1.5)
+# ax2.set_ylabel('Number of addresses', color = pal[1])
+# ax2.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
+# ax2.grid(False)
 
-ax1[1].scatter(df.close, df.nr_addresses, color = pal[0], s = .3)
+ax1[1].scatter(df.close, df.nr_addresses, color = pal[0], s = .1)
 # ax1[1].ticklabel_format(axis="y", style="sci", scilimits=(0,0))
 ax1[1].set_xlabel('Price, USD (log scale)')
 ax1[1].set_ylabel('New addresses (log scale)')
 ax1[1].set_yscale('log')
 ax1[1].set_xscale('log')
 
-# plt.savefig("charts/nr_address.pdf")
+# plt.savefig("charts/nr_address.png")
 
 # %%
 # '' number of value transfers '''
@@ -319,14 +322,14 @@ ax1[0].plot(df.date, df.nr_call, color = pal[0], linewidth = .1)
 ax1[0].set_ylabel('Nr. of value transfers')
 ax1[0].ticklabel_format(axis="y", style="sci", scilimits=(0,0))
 
-ax1[1].scatter(df.close, df.nr_call, color = pal[0], s = .3)
+ax1[1].scatter(df.close, df.nr_call, color = pal[0], s = .1)
 # ax1[1].ticklabel_format(axis="y", style="sci", scilimits=(0,0))
 ax1[1].set_xlabel('Price, USD (log scale)')
 ax1[1].set_ylabel('Nr. of value transfers (log scale)')
 ax1[1].set_yscale('log')
 ax1[1].set_xscale('log')
 
-# plt.savefig("charts/nr_calls.pdf")
+# plt.savefig("charts/nr_calls.png")
 
 
 # %%
@@ -336,24 +339,24 @@ fig, ax1 = plt.subplots(2, 1, figsize=(8, 8))
 
 # ax1[0].plot(df.date, df.stddev_fee_usd, color = pal[1], linewidth = .3)
 # ax1[0].set_ylabel('StDev. Gas fees, ETH', color = pal[1])
-ax1[0].plot(df.date, df.avg_fee_usd, color = pal[1], linewidth = .3)
+ax1[0].plot(df.date, df.avg_fee_usd, color = pal[1], linewidth = .1)
 ax1[0].set_ylabel('Avg. Gas fees, ETH (log scale)', color = pal[1])
 ax1[0].set_yscale('log')
 
 ax2 = ax1[0].twinx()
-ax2.plot(df.date, df.avg_fee_usd, color = pal[0], linewidth = .2)
+ax2.plot(df.date, df.avg_fee_usd, color = pal[0], linewidth = .1)
 ax2.set_ylabel('Avg. Gas fees, ETH', color = pal[0])
 ax2.set_ylim([-1, 100])
 ax2.grid(False)
 
-ax1[1].scatter(df.close, df.avg_fee_usd, color = pal[0], s = .3)
+ax1[1].scatter(df.close, df.avg_fee_usd, color = pal[0], s = .1)
 # ax1[1].ticklabel_format(axis="y", style="sci", scilimits=(0,0))
 ax1[1].set_xlabel('Price, USD (log scale)')
 ax1[1].set_ylabel('Avg. Gas fees, ETH (log scale)')
 ax1[1].set_yscale('log')
 ax1[1].set_xscale('log')
 
-plt.savefig("charts/gas_fees.pdf")
+# plt.savefig("charts/gas_fees.png")
 
 
 # %%
@@ -372,7 +375,7 @@ plt.savefig("charts/gas_fees.pdf")
 
 fig, ax1 = plt.subplots(2, 1, figsize=(8, 8))
 
-ax1[0].plot(df.date, df.stddev_call_value_usd, color = pal[1], linewidth = .2)
+ax1[0].plot(df.date, df.stddev_call_value_usd, color = pal[1], linewidth = .1)
 ax1[0].set_ylabel('StDev. transfer amount, USD', color = pal[1])
 ax1[0].ticklabel_format(axis="y", style="sci", scilimits=(0,0))
 
@@ -383,18 +386,18 @@ ax2.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
 ax2.set_yscale('log')
 ax2.grid(False)
 
-ax1[1].scatter(df.close, df.avg_call_value_usd, color = pal[0], s = .3)
+ax1[1].scatter(df.close, df.avg_call_value_usd, color = pal[0], s = .1)
 # ax1[1].ticklabel_format(axis="y", style="sci", scilimits=(0,0))
 ax1[1].set_xlabel('Price, USD (log scale)')
-ax1[1].set_ylabel('Nr. of value transfers (log scale)')
+ax1[1].set_ylabel('Avg. transfer amount, USD (log scale)')
 ax1[1].set_yscale('log')
 ax1[1].set_xscale('log')
 
-# plt.savefig("charts/call_value.pdf")
+# plt.savefig("charts/call_value.png")
 
 
 # %%
-# '' gas fees '''
+# '' profit/loss, USD '''
 
 fig, ax1 = plt.subplots(2, 1, figsize=(8, 8))
 
@@ -406,13 +409,13 @@ ax2.plot(df.date, df.avg_balance_usd, color = pal[0])
 ax2.set_ylabel('Avg. profit/loss, USD', color = pal[0])
 ax2.grid(False)
 
-ax1[1].scatter(df.close, df.avg_balance_usd, color = pal[0], s = .3)
-ax1[1].set_xlabel('Price, USD (log scale)')
-ax1[1].set_ylabel('Avg. profit/loss, USD')
+ax1[1].scatter(df.close, df.stddev_balance_usd, color = pal[0], s = .1)
+ax1[1].set_xlabel('Price, USD')
+ax1[1].set_ylabel('StDev. profit/loss, USD')
 # ax1[1].set_yscale('log')
-ax1[1].set_xscale('log')
+# ax1[1].set_xscale('log')
 
-# plt.savefig("charts/USD_profitloss.pdf")
+# plt.savefig("charts/USD_profitloss.png")
 
 
 # %%
@@ -428,7 +431,7 @@ ax1[1].plot(df.date, df.net_exchange, color = pal[0], linewidth = .3)
 ax1[1].ticklabel_format(axis="y", style="sci", scilimits=(0,0))
 ax1[1].set_ylabel('Exchanges net-flows, ETH')
 
-# plt.savefig("charts/exchanges_flows.pdf")
+# plt.savefig("charts/exchanges_flows.png")
 
 # %%
 # '' gini coefficient '''
@@ -439,13 +442,13 @@ fig, ax1 = plt.subplots(2, 1, figsize=(8, 8))
 ax1[0].plot(df.date, df.gini, color = pal[0], linewidth = .8)
 ax1[0].set_ylabel('Gini coefficient')
 
-ax1[1].scatter(df.close, df.gini, color = pal[0], s = .8)
+ax1[1].scatter(df.close, df.gini, color = pal[0], s = .1)
 ax1[1].set_xlabel('Price, USD')
 ax1[1].set_ylabel('Gini coefficient')
 ax1[1].set_xscale('log')
 # ax1[1].set_yscale('log')
 
-# plt.savefig("charts/gini.pdf")
+plt.savefig("charts/gini.png")
 
 
 # %%
@@ -476,11 +479,11 @@ plt.tight_layout()
 
 fig, ax1 = plt.subplots(figsize=(8, 4))
 
-ax1.plot(df.date, df.avg_outdegree, color = pal[0], linewidth = .1)
+ax1.plot(df.date, df.avg_outdegree, color = pal[0], linewidth = .1)#, marker = '.', markersize = .1, linewidth = 0)
 ax1.set_ylabel('Avg. degree')
-ax1.set_ylim([0.5, 3])
+ax1.set_ylim([0.5, 2.5])
 
-# plt.savefig("charts/avg_degree.pdf")
+plt.savefig("charts/avg_degree.png")
 
 
 # %%
@@ -490,10 +493,10 @@ fig, ax1 = plt.subplots(2, 1, figsize=(8, 8))
 
 ax1[0].plot(df.date, df.stddev_indegree, color = pal[0], linewidth = .1)
 ax1[0].set_ylabel('StDev. indegree')
-ax1[0].set_ylim([0, 150])
+ax1[0].set_ylim([0, 100])
 
 ax1[1].plot(df.date, df.stddev_outdegree, color = pal[0], linewidth = .1)
 ax1[1].set_ylabel('StDev. outdegree')
-ax1[1].set_ylim([0, 150])
+ax1[1].set_ylim([0, 100])
 
-# plt.savefig("charts/std_degree.pdf")
+# plt.savefig("charts/std_degree.png")
