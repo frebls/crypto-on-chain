@@ -1,6 +1,6 @@
 torch==1.9.0
 torchvision==0.10.0
-pytorch-lightning==1.2.5
+pytorch-lightning==1.5.10
 google-cloud-bigquery==2.26.0
 tqdm==4.59.0
 "ray[tune]"==1.6.0
